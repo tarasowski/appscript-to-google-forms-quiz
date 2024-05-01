@@ -1,7 +1,10 @@
+var folderId = "14iA0meL3by3WZwBelHNfBO0JhN3f2bmK"
+
 function doGet() {
   var ss = SpreadsheetApp.getActive();
   var sheet = ss.getSheetByName('Sheet1');
   var numberRows = sheet.getDataRange().getNumRows();
+  var fileName = ss.getName(); 
 
   // Read the sheet data into arrays.
   var myQuestions = sheet.getRange(2, 1, numberRows - 1, 1).getValues(); 
@@ -36,7 +39,8 @@ function doGet() {
   }
 
   // Create the form as a quiz.
-  var form = FormApp.create('Quiz Form');
+  var form = FormApp.create(fileName);
+  
   form.setIsQuiz(true);
   form.setRequireLogin(false);
 
