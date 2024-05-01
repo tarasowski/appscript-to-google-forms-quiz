@@ -38,20 +38,47 @@ function doGet() {
     shuffledQuestions.push(shuffledQuestion);
   }
 
+  var existingForm = getFormByNameInFolder(fileName, folderId);
+
+  // If an existing form is found, update it; otherwise, create a new form
+  var form;
+  if (existingForm) {
+    form = existingForm;
+    form.getItems(FormApp.ItemType.MULTIPLE_CHOICE).forEach(function(item) {
+      form.deleteItem(item);
+    });
+  } else {
+    form = FormApp.create(fileName);
+  }
+
+  var formId = form.getId();
+
+
   // Create the form as a quiz.
-  var form = FormApp.create(fileName);
+  //var form = FormApp.create(fileName);
+   //var formId = form.getId();
+  
+  
+  // Get the folder where you want to save the form
+  
+  
+  var folder = DriveApp.getFolderById(folderId);
+  var formFile = DriveApp.getFileById(formId);
+  formFile.moveTo(folder)
   
   form.setIsQuiz(true);
   form.setRequireLogin(false);
 
   // Add email question as the first question.
-  var emailItem = form.addTextItem();
-  emailItem.setTitle("Email")
-           .setRequired(true)
-           .setValidation(FormApp.createTextValidation()
-                                  .requireTextIsEmail()
-                                  .build());
-
+  var emailItem = form.getItems(FormApp.ItemType.TEXT)[0];
+  if (!emailItem || emailItem.getTitle() !== "Email") {
+    emailItem = form.addTextItem();
+    emailItem.setTitle("Email")
+             .setRequired(true)
+             .setValidation(FormApp.createTextValidation()
+                                    .requireTextIsEmail()
+                                    .build());
+  }
   // Write out each multiple-choice question to the form.
   for (var i = 0; i < shuffledQuestions.length; i++) {
     var question = shuffledQuestions[i];
@@ -84,4 +111,17 @@ function shuffleArray(array) {
     array[randomIndex] = temporaryValue;
   }
   return array;
+}
+
+// Function to get a form by name within a specific folder
+function getFormByNameInFolder(formName, folderId) {
+  var folder = DriveApp.getFolderById(folderId);
+  var files = folder.getFiles();
+  while (files.hasNext()) {
+    var file = files.next();
+    if (file.getName() === formName && file.getMimeType() === MimeType.GOOGLE_FORMS) {
+      return FormApp.openById(file.getId());
+    }
+  }
+  return null;
 }
